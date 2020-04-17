@@ -4,8 +4,6 @@ import argparse
 import configparser
 
 
-# github.com access token: 8d45329e88a535d883e995dbbd19327922f3dda4
-
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-s', '--source_org', help="Source Organization", required=True)
