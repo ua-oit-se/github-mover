@@ -44,8 +44,10 @@ token = YourPersonalAccessTokenOnTheDestinationInstance
 
 Then to migrate every repo from OIT-CSS on github.alaska.edu to ua-oit-se on github.com you could use the following command:
 ```
-python migrate.py -s OIT-CSS -d ua-oit-se
+python migrate.py -s OIT-CSS -d ua-oit-se -a
 ```
+This will also automatically update the source repo's README.md with a link to the new repo location, instructions for how to update the git config, and set the source repo to archived to prevent new commits after it's been migrated.
+
 
 If you don't want to use `config.ini` then everything can be provided via arguments:
 ```
@@ -67,4 +69,6 @@ optional arguments:
                         Source Access Token
   --destination_token DESTINATION_TOKEN
                         Destination Access Token
+  -a, --archive         Archive Source Repos with an updated README to the new
+                        repo location
 ```
