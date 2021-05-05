@@ -1,4 +1,4 @@
-from github import Github
+from github import Github, GithubException
 from subprocess import call
 import argparse
 import configparser
@@ -12,6 +12,7 @@ def main():
     parser.add_argument('--dest_url', help="destination github url", default='https://api.github.com')
     parser.add_argument('--source_token', help="Source Access Token")
     parser.add_argument('--destination_token', help="Destination Access Token")
+    parser.add_argument('-a', '--archive', action="store_true", help="Archive Source Repos with an updated README to the new repo location")
     args = parser.parse_args()
 
     config = configparser.ConfigParser()
@@ -48,15 +49,19 @@ def main():
 
     source_github = Github(base_url=source_url, login_or_token=source_token)
     dest_github = Github(base_url=dest_url, login_or_token=dest_token)
-
-    clone_repos(source_github, dest_github, source_org, dest_org)
-
-
-def clone_repos(source_github, dest_github, source_org, dest_org):
     source_org = source_github.get_organization(source_org)
     source_repos = source_org.get_repos()
     dest_org = dest_github.get_organization(dest_org)
     dest_repos = dest_org.get_repos()
+
+    repos_to_migrate, repos_to_update = compare_repos(source_repos, dest_repos)
+
+    create_repos(dest_org, repos_to_migrate, archive=args.archive)
+
+    if args.archive:
+        archive_repos(source_repos, args.destination_org)
+
+def compare_repos(source_repos, dest_repos):
 
     repos_to_update = []
     repos_to_migrate = []
@@ -71,13 +76,14 @@ def clone_repos(source_github, dest_github, source_org, dest_org):
         if need_to_migrate:
             repos_to_migrate.append(repo)
 
-    create_repos(dest_org, repos_to_migrate)
-    migrate_repos(source_org, dest_org, repos_to_update)
+    return repos_to_migrate, repos_to_update
+
 
 def migrate_repos(source_org, dest_org, repos):
     pass
 
-def create_repos(org, repos):
+
+def create_repos(org, repos, archive=False):
     for repo in repos:
         print("Creating Repo %s..." % repo.name)
         homepage = repo.homepage if repo.homepage else ''
@@ -89,6 +95,46 @@ def create_repos(org, repos):
         call('git remote add destination %s' % new_repo.ssh_url, shell=True, cwd=repo.name + '.git')
         call('git push destination --mirror', shell=True, cwd=repo.name + '.git')
         call('rm -rf %s.git' % repo.name, shell=True)
+
+
+def update_readme(repo, dest_org):
+    readme = None
+    info = """# This Repo Has Moved!
+
+This repo is now located at [{url}]({url})
+To point your current repo at it type:
+
+```
+git remote set-url origin git@github.com:{org_name}/{repo_name}.git
+```    
+""".format(url="https://github.com/%s/%s" % (dest_org, repo.name), org_name=dest_org, repo_name=repo.name)
+
+    print("\tUpdating README...")
+    try:
+        for content in repo.get_contents(""):  # get files at the root of the repo
+            if content.path.lower() == "readme.md":
+                print("\t\tExisting README.md found prepending info")
+                readme = content
+                break
+    except GithubException as e:
+        print(e)
+    # No README.md
+    if readme is not None:
+        info += readme.decoded_content.decode()
+        repo.update_file('README.md', "Update: Update README with new repo location before archive", info, readme.sha)
+    else:
+        print("\tNo README.md found, creating one with info")
+        repo.create_file('README.md', "Update: Update README with new repo location before archive", info)
+
+
+
+def archive_repos(repos, dest_org):
+    for repo in repos:
+        if not repo.archived:
+            print("Archiving Repo %s" % repo.full_name)
+            update_readme(repo, dest_org)
+            repo.edit(archived=True)
+            print("Success")
 
 
 if __name__ == "__main__":
