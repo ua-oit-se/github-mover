@@ -2,6 +2,11 @@ from github import Github, GithubException
 from subprocess import call
 import argparse
 import configparser
+from selenium import webdriver
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By
+from selenium.common.exceptions import TimeoutException
 
 
 def main():
@@ -13,6 +18,8 @@ def main():
     parser.add_argument('--source_token', help="Source Access Token")
     parser.add_argument('--destination_token', help="Destination Access Token")
     parser.add_argument('-a', '--archive', action="store_true", help="Archive Source Repos with an updated README to the new repo location")
+    parser.add_argument('-u', '--undo_archive', action="store_true",
+                        help="UnArchive Source Repos and revert the last change")
     args = parser.parse_args()
 
     config = configparser.ConfigParser()
@@ -51,6 +58,10 @@ def main():
     dest_github = Github(base_url=dest_url, login_or_token=dest_token)
     source_org = source_github.get_organization(source_org)
     source_repos = source_org.get_repos()
+
+    if args.undo_archive:
+        undo_archive(source_repos, args.source_org)
+        exit()
     dest_org = dest_github.get_organization(dest_org)
     dest_repos = dest_org.get_repos()
 
@@ -135,6 +146,54 @@ def archive_repos(repos, dest_org):
             update_readme(repo, dest_org)
             repo.edit(archived=True)
             print("Success")
+
+def undo_archive(repos, source_org):
+    print("Checking for repos that were archived:")
+    driver = webdriver.Chrome()
+    for repo in repos:
+        print("Checking", repo.name, "...")
+        if repo.archived:
+            print("\tIts archived, checking to see if this script did that...")
+            readme = None
+            first_line = '# This Repo Has Moved!'
+            try:
+                for content in repo.get_contents(""):  # get files at the root of the repo
+                    if content.path.lower() == "readme.md":
+                        print("\tExisting README.md found, checking if it was modified by this script")
+                        readme = content
+                        break
+            except GithubException as e:
+                print(e)
+            # No README.md
+            if readme is not None:
+                readme = readme.decoded_content.decode()
+                lines = readme.split('\n')
+                if lines[0] == first_line:
+                    print("\tSomething that needs to be reverted")
+
+                    # This was something we did, let's roll it back:
+                    url = 'https://github.alaska.edu/%s/%s/settings' % (source_org, repo.name)
+                    driver.get(url)
+                    if driver.current_url != url:
+                        # Fill in your username and password here if you don't want to login manually
+                        # driver.find_element_by_id('login_field').send_keys('Username')
+                        # driver.find_element_by_id('password').send_keys('yourSuperSecretpassword')
+                        # driver.find_element_by_name('commit').click()
+                        wait = WebDriverWait(driver, 300)
+                        wait.until(EC.url_to_be(url))
+                    driver.find_element_by_xpath('//button[@class="btn btn-danger boxed-action"][normalize-space()="Unarchive this repository"]').click()
+                    wait = WebDriverWait(driver, 5)
+                    wait.until(EC.visibility_of_element_located((By.XPATH, "//input[@aria-label='Type in the name of the repository to confirm that you want to unarchive this repository.']")))
+                    driver.find_element_by_xpath("//input[@aria-label='Type in the name of the repository to confirm that you want to unarchive this repository.']").send_keys(repo.name)
+                    driver.find_element_by_xpath("//button[normalize-space()='I understand the consequences, unarchive this repository']").click()
+                    call('git clone %s' % repo.ssh_url, shell=True)
+                    call('git reset --hard HEAD^', shell=True, cwd=repo.name)
+                    call('git push origin -f', shell=True, cwd=repo.name)
+                    call('rm -rf %s' % repo.name, shell=True)
+            else:
+                print("\tNo README.md found, this was not archived by our script so not undoing")
+
+    driver.close()
 
 
 if __name__ == "__main__":
