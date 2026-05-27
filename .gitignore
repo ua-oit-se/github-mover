@@ -1,3 +1,5 @@
 config.ini
+setup.bat
 .idea/
 venv/
+env/

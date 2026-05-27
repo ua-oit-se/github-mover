@@ -1,7 +1,8 @@
-from github import Github, GithubException
+from github import Auth, Github, GithubException
 from subprocess import call
 import argparse
 import configparser
+import platform
 
 
 def main():
@@ -47,8 +48,8 @@ def main():
     if dest_url != 'https://api.github.com' and not dest_url.endswith('/api/v3'):
         dest_url += '/api/v3'
 
-    source_github = Github(base_url=source_url, login_or_token=source_token)
-    dest_github = Github(base_url=dest_url, login_or_token=dest_token)
+    source_github = Github(base_url=source_url, auth=Auth.Token(source_token))
+    dest_github = Github(base_url=dest_url, auth=Auth.Token(dest_token))
     source_org = source_github.get_organization(source_org)
     source_repos = source_org.get_repos()
     dest_org = dest_github.get_organization(dest_org)
@@ -84,6 +85,8 @@ def migrate_repos(source_org, dest_org, repos):
 
 
 def create_repos(org, repos, archive=False):
+    current_os = platform.system()
+
     for repo in repos:
         print("Creating Repo %s..." % repo.name)
         homepage = repo.homepage if repo.homepage else ''
@@ -94,7 +97,11 @@ def create_repos(org, repos, archive=False):
         call('git clone %s --bare' % repo.ssh_url, shell=True)
         call('git remote add destination %s' % new_repo.ssh_url, shell=True, cwd=repo.name + '.git')
         call('git push destination --mirror', shell=True, cwd=repo.name + '.git')
-        call('rm -rf %s.git' % repo.name, shell=True)
+
+        if current_os == 'Windows':
+            call('rmdir /s /q %s.git' % repo.name, shell=True)
+        elif current_os == 'Linux':
+            call('rm -rf %s.git' % repo.name, shell=True)
 
 
 def update_readme(repo, dest_org):
@@ -102,7 +109,8 @@ def update_readme(repo, dest_org):
     info = """# This Repo Has Moved!
 
 This repo is now located at [{url}]({url})
-To point your current repo at it type:
+
+Use the following command to point your local repo at it:
 
 ```
 git remote set-url origin git@github.com:{org_name}/{repo_name}.git
@@ -113,7 +121,7 @@ git remote set-url origin git@github.com:{org_name}/{repo_name}.git
     try:
         for content in repo.get_contents(""):  # get files at the root of the repo
             if content.path.lower() == "readme.md":
-                print("\t\tExisting README.md found prepending info")
+                print("\t\tExisting README.md found, prepending info")
                 readme = content
                 break
     except GithubException as e:
