@@ -44,7 +44,7 @@ SSH access to *both* source and destination github sites is necessary.
 	- Enter a passphrase or leave it empty for no passphrase
 	- Re-enter the passphrase (or lack thereof)
 3. Locate the two files generated from that (`[filename]` and `[filename].pub`)
-	- If they're not already in your .ssh folder, move them there
+	- If they're not already in your `.ssh` folder, move them there
 	- Open `[filename].pub` in Notepad or another text editor
 	- Copy the contents of the public key file
 4. Log into github.com and github.alaska.edu, then navigate to your profile settings by clicking on your profile image towards the upper right and select 'Settings' from the menu that appears
@@ -57,7 +57,7 @@ SSH access to *both* source and destination github sites is necessary.
 
 ##### Update your SSH config file
 
-1. If there isn't a `config` file in your .ssh folder, create a new file and name it `config` (no file extension)
+1. If there isn't a `config` file in your `.ssh` folder, create a new file and name it `config` (no file extension)
 2. Open the `config` file in Notepad or another text editor
 3. Add the following (replace the bracketed items with your info):
 ```
@@ -91,7 +91,7 @@ On the destination it must have permission to create a repo.
 6. In the 'Token name' field, give the token a unique name that reflects its purpose (GitHub will let you know if the name is not available)
 7. Click on the 'Resource owner' drop-down
 8. In the list that appears, select the organization you want to migrate repositories to (please note that __the target organization must exist *prior* to creating this token__)
-9. (Optional) By default tokens expire after 30 days, if you would like to change this, click on the 'Expiration' drop-down and select the desired life-span for the token
+9. (Optional) By default, tokens expire after 30 days, if you would like to change this, click on the 'Expiration' drop-down and select the desired life-span for the token
 10. Under the 'Repository access' header, select 'All repositories'
 11. In the 'Permissions' section, click the 'Add permissions' button towards the right of the page
 12. In the list that appears, select 'Administration'
@@ -102,8 +102,8 @@ On the destination it must have permission to create a repo.
 	- If you need to go back and make any changes, click the 'Cancel' button, make your changes, then resume at step 15
 	- If everything is ready to go, click on the 'Generate token' button
 17. Copy your token (it's a long string of numbers and letters starting with `github_pat_` with a green bell icon to the left of it -- you will not see it again if you navigate away from this page)
-18. In your config.ini file, paste the token in the 'token' field under the '`[destination]`' header
-19. Save your changes to config.ini
+18. In your `config.ini` file, paste the token in the 'token' field under the '`[destination]`' header
+19. Save your changes to `config.ini`
 
 #### How to create a personal access token in GitHub.alaska.edu
 
@@ -117,8 +117,8 @@ On the destination it must have permission to create a repo.
 	- `admin:org` (all items)
 7. Scroll down and click the 'Generate token' button
 8. Copy your token (it's a string of numbers and letters with a green check mark to the immediate left of it -- you will not see it again if you navigate away from this page)
-9. In your config.ini file, paste the token in the 'token' field under the '`[source]`' header
-10. Save your changes to config.ini
+9. In your `config.ini` file, paste the token in the 'token' field under the '`[source]`' header
+10. Save your changes to `config.ini`
 
 ## Usage
 
