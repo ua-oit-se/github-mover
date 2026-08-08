@@ -5,65 +5,8 @@ import configparser
 import platform
 
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-s', '--source_org', help="Source Organization", required=True)
-    parser.add_argument('-d', '--destination_org', help="Destination Organization", required=True)
-    parser.add_argument('--source_url', help="Source github url")
-    parser.add_argument('--dest_url', help="destination github url", default='https://api.github.com')
-    parser.add_argument('--source_token', help="Source Access Token")
-    parser.add_argument('--destination_token', help="Destination Access Token")
-    parser.add_argument('-a', '--archive', action="store_true", help="Archive Source Repos with an updated README to the new repo location")
-    args = parser.parse_args()
-
-    config = configparser.ConfigParser()
-    config.read("config.ini")
-    source_url = config["source"]["url"]
-    dest_url = config["destination"]["url"]
-    source_token = config["source"]["token"]
-    dest_token = config["destination"]["token"]
-    source_org = args.source_org
-    dest_org = args.destination_org
-
-    if args.source_url:
-        source_url = args.source_url
-    if args.dest_url:
-        dest_url = args.dest_url
-    if args.source_token:
-        source_token = args.source_token
-    if args.destination_token:
-        dest_token = args.destination_token
-
-    if not source_url or not dest_url or not source_token or not dest_token:
-        print("Could not find config file or not all arguments provided.")
-        print("Must have the source URL, destination URL, source token, and destination token")
-        exit(1)
-
-    if not source_url.startswith("http"):
-        source_url = 'https://' + source_url
-    if not source_url.endswith('/api/v3'):
-        source_url += '/api/v3'
-    if not dest_url.startswith("http"):
-        dest_url = 'https://' + dest_url
-    if dest_url != 'https://api.github.com' and not dest_url.endswith('/api/v3'):
-        dest_url += '/api/v3'
-
-    source_github = Github(base_url=source_url, auth=Auth.Token(source_token))
-    dest_github = Github(base_url=dest_url, auth=Auth.Token(dest_token))
-    source_org = source_github.get_organization(source_org)
-    source_repos = source_org.get_repos()
-    dest_org = dest_github.get_organization(dest_org)
-    dest_repos = dest_org.get_repos()
-
-    repos_to_migrate, repos_to_update = compare_repos(source_repos, dest_repos)
-
-    create_repos(dest_org, repos_to_migrate, archive=args.archive)
-
-    if args.archive:
-        archive_repos(source_repos, args.destination_org)
-
+# Determines if repository exists at the destination or not
 def compare_repos(source_repos, dest_repos):
-
     repos_to_update = []
     repos_to_migrate = []
 
@@ -80,18 +23,15 @@ def compare_repos(source_repos, dest_repos):
     return repos_to_migrate, repos_to_update
 
 
-def migrate_repos(source_org, dest_org, repos):
-    pass
-
-
-def create_repos(org, repos, archive=False):
+# Migrates repositories to the destination (use when repos do not exist at the destination)
+def migrate_repos(entity, repos):
     current_os = platform.system()
 
     for repo in repos:
-        print("Creating Repo %s..." % repo.name)
+        print('Creating Repo %s...' % repo.name)
         homepage = repo.homepage if repo.homepage else ''
         description = repo.description if repo.description else ''
-        new_repo = org.create_repo(repo.name, description=description, homepage=homepage, private=True,
+        new_repo = entity.create_repo(repo.name, description=description, homepage=homepage, private=True,
                                    has_issues=repo.has_issues, has_wiki=repo.has_wiki, has_downloads=repo.has_downloads,
                                    has_projects=repo.has_projects, auto_init=False)
         call('git clone %s --bare' % repo.ssh_url, shell=True)
@@ -104,7 +44,24 @@ def create_repos(org, repos, archive=False):
             call('rm -rf %s.git' % repo.name, shell=True)
 
 
-def update_readme(repo, dest_org):
+# Updates repositories at the destination (use when repos do exist at the destination)
+def update_repos(source, dest, repos):
+    current_os = platform.system()
+
+    for repo in repos:
+        print('Creating Repo %s...' % repo.name)
+
+        # TODO: identify if source or destination has most recent updates or if they have divergent changes
+        # TODO: print note to user about how it was handled
+
+        if current_os == 'Windows':
+            call('rmdir /s /q %s.git' % repo.name, shell=True)
+        elif current_os == 'Linux':
+            call('rm -rf %s.git' % repo.name, shell=True)
+
+
+# Updates the README with an archival message
+def update_readme(repo, dest):
     readme = None
     info = """# This Repo Has Moved!
 
@@ -115,13 +72,13 @@ Use the following command to point your local repo at it:
 ```
 git remote set-url origin git@github.com:{org_name}/{repo_name}.git
 ```    
-""".format(url="https://github.com/%s/%s" % (dest_org, repo.name), org_name=dest_org, repo_name=repo.name)
+""".format(url='https://github.com/%s/%s' % (dest, repo.name), entity_name=dest, repo_name=repo.name)
 
-    print("\tUpdating README...")
+    print('\tUpdating README...')
     try:
-        for content in repo.get_contents(""):  # get files at the root of the repo
-            if content.path.lower() == "readme.md":
-                print("\t\tExisting README.md found, prepending info")
+        for content in repo.get_contents(''):  # get files at the root of the repo
+            if content.path.lower() == 'readme.md':
+                print('\t\tExisting README.md found, prepending info')
                 readme = content
                 break
     except GithubException as e:
@@ -129,21 +86,114 @@ git remote set-url origin git@github.com:{org_name}/{repo_name}.git
     # No README.md
     if readme is not None:
         info += readme.decoded_content.decode()
-        repo.update_file('README.md', "Update: Update README with new repo location before archive", info, readme.sha)
+        repo.update_file('README.md', 'Update: Update README with new repo location before archive', info, readme.sha)
     else:
-        print("\tNo README.md found, creating one with info")
-        repo.create_file('README.md', "Update: Update README with new repo location before archive", info)
+        print('\tNo README.md found, creating one with info')
+        repo.create_file('README.md', 'Update: Update README with new repo location before archive', info)
 
 
-
-def archive_repos(repos, dest_org):
+# Marks repos as archived
+def archive_repos(repos, dest):
     for repo in repos:
         if not repo.archived:
-            print("Archiving Repo %s" % repo.full_name)
-            update_readme(repo, dest_org)
+            print('Archiving Repo %s' % repo.full_name)
+            update_readme(repo, dest)
             repo.edit(archived=True)
-            print("Success")
+            print('Success')
 
 
-if __name__ == "__main__":
-    main()
+if __name__ == '__main__':
+    # Retrieve arguments passed in
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-s', '--source', help='Source', required=True)
+    parser.add_argument('-d', '--destination', help='Destination', required=True)
+    parser.add_argument('--source_url', help='Source github url')
+    parser.add_argument('--dest_url', help='destination github url', default='https://api.github.com')
+    parser.add_argument('--source_token', help='Source Access Token')
+    parser.add_argument('--dest_token', help='Destination Access Token')
+    parser.add_argument('-a', '--archive', action='store_true', help='Archive Source Repos with an updated README to the new repo location')
+    parser.add_argument('-o', '--organization', action='store_true', help='Organization-specific repositories, default is user-specific repositories')
+    args = parser.parse_args()
+
+    ORG = False
+    if args.organization:
+        ORG = True
+
+    # Retrieve arguments from config.ini
+    config = configparser.ConfigParser()
+    config.read('config.ini')
+
+    source_user, dest_user = '', ''
+    source_org, dest_org = '', ''
+    source_token, dest_token = '', ''
+
+    if ORG:
+        source_org = args.source
+        dest_org = args.destination
+        source_token = config['org_source']['token']
+        dest_token = config['org_destination']['token']
+        source_url = config['org_source']['url']
+        dest_url = config['org_destination']['url']
+    else:
+        source_user = args.source
+        dest_user = args.destination
+        source_token = config['user_source']['token']
+        dest_token = config['user_destination']['token']
+        source_url = config['user_source']['url']
+        dest_url = config['user_destination']['url']
+
+    # Using the flags for source_url, dest_url, source_token, and dest_token overrides config.ini
+    if args.source_token:
+        source_token = args.source_token
+    if args.dest_token:
+        dest_token = args.dest_token
+    if args.source_url:
+        source_url = args.source_url
+    if args.dest_url:
+        dest_url = args.dest_url
+
+    # Stop if required information wasn't provided
+    if not source_url or not dest_url or not source_token or not dest_token:
+        print('Could not find config file or not all arguments provided.')
+        print('Must have the source URL, destination URL, source token, and destination token')
+        exit(1)
+
+    # Assemble URLs
+    if not source_url.startswith('http'):
+        source_url = 'https://' + source_url
+    if not source_url.endswith('/api/v3'):
+        source_url += '/api/v3'
+    if not dest_url.startswith('http'):
+        dest_url = 'https://' + dest_url
+    if dest_url != 'https://api.github.com' and not dest_url.endswith('/api/v3'):
+        dest_url += '/api/v3'
+
+    source_github = Github(base_url=source_url, auth=Auth.Token(source_token))
+    dest_github = Github(base_url=dest_url, auth=Auth.Token(dest_token))
+
+    # Identify relevant repositories
+    source_repos, dest_repos = None, None
+    if ORG:
+        source_org = source_github.get_organization(source_org)
+        source_repos = source_org.get_repos()
+        dest_org = dest_github.get_organization(dest_org)
+        dest_repos = dest_org.get_repos()
+    else:
+        source_user = source_github.get_user()
+        source_repos = source_user.get_repos(type="owner")
+        dest_user = dest_github.get_user()
+        dest_repos = dest_user.get_repos()
+
+    # Compare source repositories to destination repositories
+    repos_to_migrate, repos_to_update = compare_repos(source_repos, dest_repos)
+
+    # Perform migrations
+    if ORG:
+        migrate_repos(dest_org, repos_to_migrate)
+        # update_repos(source_org, dest_org, repos_to_update)
+    else:
+        migrate_repos(dest_user, repos_to_migrate)
+        # update_repos(source_user, dest_user, repos_to_update)
+
+    if args.archive:
+        archive_repos(source_repos, args.destination)
