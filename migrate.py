@@ -3,6 +3,7 @@ from subprocess import call
 import argparse
 import configparser
 import platform
+import subprocess
 
 
 # Determines if repository exists at the destination or not
@@ -45,19 +46,81 @@ def migrate_repos(entity, repos):
 
 
 # Updates repositories at the destination (use when repos do exist at the destination)
-def update_repos(source, dest, repos):
+def update_repos(repos, dest_repos):
     current_os = platform.system()
 
     for repo in repos:
-        print('Creating Repo %s...' % repo.name)
+        print('Updating Repo %s...' % repo.name)
+        overwrite, prompt_user = False, False
 
-        # TODO: identify if source or destination has most recent updates or if they have divergent changes
-        # TODO: print note to user about how it was handled
+        # Identify if source or destination has most recent updates or if they have divergent changes
+        activity_source, activity_dest = False, False
+        call('git clone %s' % repo.ssh_url, shell=True)
+
+        dest_repo = ''
+        for drepo in dest_repos:
+            if repo.name == drepo.name:
+                dest_repo = drepo
+
+        call('git remote add remote-b %s' % dest_repo.ssh_url, shell=True, cwd=repo.name)
+        call('git fetch --all', shell=True, cwd=repo.name)
+
+        result_a = subprocess.run(['git', 'symbolic-ref', '--short', 'refs/remotes/origin/HEAD'], cwd=repo.name, capture_output=True, text=True, check=True)
+        head_a = result_a.stdout.strip().split('/', 1)[1]
+
+        result_b = subprocess.run(['git', 'symbolic-ref', '--short', 'refs/remotes/remote-b/HEAD'], cwd=repo.name, capture_output=True, text=True, check=True)
+        head_b = result_b.stdout.strip().split('/', 1)[1]
+
+        remotes_a = 'remote-b/%s..origin/%s' % (head_b, head_a)
+        log_a = subprocess.run(['git', 'log', remotes_a, '--oneline'], cwd=repo.name, capture_output=True, text=True, check=True)
+        if log_a.stdout.strip() != '':
+            activity_source = True
+
+        remotes_b = 'origin/%s..remote-b/%s' % (head_a, head_b)
+        log_b = subprocess.run(['git', 'log', remotes_b, '--oneline'], cwd=repo.name, capture_output=True, text=True, check=True)
+        if log_b.stdout.strip() != '':
+            activity_dest = True
 
         if current_os == 'Windows':
-            call('rmdir /s /q %s.git' % repo.name, shell=True)
+            call('rmdir /s /q %s' % repo.name, shell=True)
         elif current_os == 'Linux':
-            call('rm -rf %s.git' % repo.name, shell=True)
+            call('rm -rf %s' % repo.name, shell=True)
+
+        if activity_source and not activity_dest:
+            print('New activity found at source; no new activity found at destination. Overwriting destination.')
+            overwrite = True
+        elif activity_source and activity_dest:
+            print('New activity found at source; new activity found at destination. Deferring to user.')
+            prompt_user = True
+        elif not activity_source and activity_dest:
+            print('No new activity found at source; new activity found at destination. Deferring to user.')
+            prompt_user = True
+        elif not activity_source and not activity_dest:
+            print('No new activity found at source; no new activity found at destination. No action needed.')
+
+        # Prompt user to overwrite or skip repository
+        if prompt_user:
+            response = input('Would you like to overwrite the destination repository? (Y/N): ')
+            
+            # Any response other than 'Y', 'y', 'YES', & 'yes' will be understood as a 'no'
+            if response.lower() in ['y', 'yes']:
+                overwrite = True
+                print('Overwriting destination.')
+            else:
+                print('Skipping %s...' % repo.name)
+
+        if overwrite:
+            call('git clone %s --bare' % repo.ssh_url, shell=True)
+            call('git remote set-url origin %s' % dest_repo.ssh_url, shell=True, cwd=repo.name + '.git')
+            new_homepage = repo.homepage if repo.homepage else ''
+            new_description = repo.description if repo.description else ''
+            dest_repo.edit(description=new_description, homepage=new_homepage)
+            call('git push --mirror', shell=True, cwd=repo.name + '.git')
+
+            if current_os == 'Windows':
+                call('rmdir /s /q %s.git' % repo.name, shell=True)
+            elif current_os == 'Linux':
+                call('rm -rf %s.git' % repo.name, shell=True)
 
 
 # Updates the README with an archival message
@@ -189,11 +252,17 @@ if __name__ == '__main__':
 
     # Perform migrations
     if ORG:
-        migrate_repos(dest_org, repos_to_migrate)
-        # update_repos(source_org, dest_org, repos_to_update)
+        if repos_to_migrate != []:
+            migrate_repos(dest_org, repos_to_migrate)
+
+        if repos_to_update != []:
+            update_repos(repos_to_update, dest_repos)
     else:
-        migrate_repos(dest_user, repos_to_migrate)
-        # update_repos(source_user, dest_user, repos_to_update)
+        if repos_to_migrate != []:
+            migrate_repos(dest_user, repos_to_migrate)
+
+        if repos_to_update != []:
+            update_repos(repos_to_update, dest_repos)
 
     if args.archive:
         archive_repos(source_repos, args.destination)
