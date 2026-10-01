@@ -92,20 +92,20 @@ On the destination it must have permission to create a repo.
 
 1. Once logged into github.com, navigate to your profile settings by clicking on your profile image towards the upper right and select 'Settings' from the menu that appears
 
-<img src="img/ghcom_settings.png" width="200" align="center">
+<img src="img/ghcom_settings.png" width="200">
 
 2. At the bottom of the list on the left-hand side of the page, select 'Developer settings'
 
-<img src="img/ghcom_dev_settings.png" width="200" align="center">
+<img src="img/ghcom_dev_settings.png" width="250">
 
 3. On the left-hand side of the Developer settings page, select 'Personal access tokens'
 4. From the options that appear beneath 'Personal access tokens', select 'Fine-grained tokens'
 
-<img src="img/ghcom_tokens.png" width="200" align="center">
+<img src="img/ghcom_tokens.png" width="300">
 
 5. Towards the right-hand side of the screen, select the 'Generate new token' button
 
-<img src="img/ghcom_generate_button.png" width="500" align="center">
+<img src="img/ghcom_generate_button.png" width="550">
 
 6. In the 'Token name' field, give the token a unique name that reflects its purpose (GitHub will let you know if the name is not available)
 7. Click on the 'Resource owner' drop-down
@@ -116,11 +116,11 @@ On the destination it must have permission to create a repo.
 12. In the list that appears, select 'Administration'
 13. Click the 'Add permissions' button again to close the list
 
-<img src="img/ghcom_perms_a.png" width="200" align="center">
+<img src="img/ghcom_perms_a.png" width="550">
 
 14. Click on the drop-down associated with the 'Administration' permission and select 'Read and write' from the options that appear
 
-<img src="img/ghcom_perms_b.png" width="200" align="center">
+<img src="img/ghcom_perms_b.png" width="550">
 
 15. At the bottom of the page, click 'Generate token'
 16. In the dialogue that appears, review your selected permissions
@@ -134,26 +134,26 @@ On the destination it must have permission to create a repo.
 
 1. Once logged into github.alaska.edu, navigate to your profile settings by clicking on your profile image towards the upper right and select 'Settings' from the menu that appears
 
-<img src="img/ghak_settings.png" width="200" align="center">
+<img src="img/ghak_settings.png" width="200">
 
 2. Near the bottom of the list on the left-hand side of the page, select 'Developer settings'
 
-<img src="img/ghak_dev_settings.png" width="200" align="center">
+<img src="img/ghak_dev_settings.png" width="225">
 
 3. On the left-hand side of the Developer settings page, select 'Personal access tokens'
 
-<img src="img/ghak_tokens.png" width="200" align="center">
+<img src="img/ghak_tokens.png" width="225">
 
 4. Towards the right-hand side of the screen, select the 'Generate new token' button
 
-<img src="img/ghak_generate_button.png" width="500" align="center">
+<img src="img/ghak_generate_button.png" width="550">
 
 5. In the 'Token description' field, give the token a name that reflects its purpose (e.g., my_repo_migration)
 6. Select the needed permission scopes
 	- `repo` (all items)
 	- `admin:org` (all items)
 
-<img src="img/ghak_perms.png" width="200" align="center">
+<img src="img/ghak_perms.png" width="550">
 
 7. Scroll down and click the 'Generate token' button
 8. Copy your token (it's a string of numbers and letters with a green check mark to the immediate left of it -- you will not see it again if you navigate away from this page)
