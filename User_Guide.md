@@ -17,6 +17,8 @@ By default every new repo is created as private.
 
 ## Prerequisites
 
+This program is designed to be run on Windows or Linux.
+
 After you have created a local clone of this repository on your machine, there are a few items that will need to be in place in order for the script to run successfully:
 - PyGithub
 - SSH keys (for both the source and the destination)
