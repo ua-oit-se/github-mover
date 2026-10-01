@@ -200,20 +200,19 @@ migrate.py [-h] -s SOURCE -d DESTINATION
                   [--destination_token DESTINATION_TOKEN]
 
 optional arguments:
-  -h, --help            show this help message and exit
-  -s SOURCE, --source SOURCE
-                        Source: User or Organization
+  -h, --help                    Show this help message and exit
+  -s SOURCE, --source           SOURCE
+                                Source: User or Organization
   -d DESTINATION, --destination DESTINATION
-                        Destination: User or Organization
-  --source_url SOURCE_URL
-                        Source github url
-  --dest_url DEST_URL   destination github url
-  --source_token SOURCE_TOKEN
-                        Source Access Token
-  --destination_token DESTINATION_TOKEN
-                        Destination Access Token
-  -a, --archive         Archive Source Repos with an updated README to the new
-                        repo location
-  -o, --organization    Organization
-                        Organization-specific repositories, default is user-specific repositories
+                                Destination: User or Organization
+  --source_url                  SOURCE_URL
+                                Source github url
+  --dest_url DEST_URL           Destination github url
+  --source_token                SOURCE_TOKEN
+                                Source Access Token
+  --destination_token           DESTINATION_TOKEN
+                                Destination Access Token
+  -a, --archive                 Archive Source Repos with an updated README to the new repo location
+  -o, --organization            Organization
+                                Organization-specific repositories, default is user-specific repositories
 ```
