@@ -105,7 +105,7 @@ On the destination it must have permission to create a repo.
 
 5. Towards the right-hand side of the screen, select the 'Generate new token' button
 
-<img src="img/ghcom_generate_button.png" width="550">
+<img src="img/ghcom_generate_button.png" width="700">
 
 6. In the 'Token name' field, give the token a unique name that reflects its purpose (GitHub will let you know if the name is not available)
 7. Click on the 'Resource owner' drop-down
@@ -116,11 +116,11 @@ On the destination it must have permission to create a repo.
 12. In the list that appears, select 'Administration'
 13. Click the 'Add permissions' button again to close the list
 
-<img src="img/ghcom_perms_a.png" width="550">
+<img src="img/ghcom_perms_a.png" width="600">
 
 14. Click on the drop-down associated with the 'Administration' permission and select 'Read and write' from the options that appear
 
-<img src="img/ghcom_perms_b.png" width="550">
+<img src="img/ghcom_perms_b.png" width="600">
 
 15. At the bottom of the page, click 'Generate token'
 16. In the dialogue that appears, review your selected permissions
@@ -146,14 +146,14 @@ On the destination it must have permission to create a repo.
 
 4. Towards the right-hand side of the screen, select the 'Generate new token' button
 
-<img src="img/ghak_generate_button.png" width="550">
+<img src="img/ghak_generate_button.png" width="700">
 
 5. In the 'Token description' field, give the token a name that reflects its purpose (e.g., my_repo_migration)
 6. Select the needed permission scopes
 	- `repo` (all items)
 	- `admin:org` (all items)
 
-<img src="img/ghak_perms.png" width="550">
+<img src="img/ghak_perms.png" width="600">
 
 7. Scroll down and click the 'Generate token' button
 8. Copy your token (it's a string of numbers and letters with a green check mark to the immediate left of it -- you will not see it again if you navigate away from this page)
