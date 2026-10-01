@@ -91,14 +91,22 @@ On the destination it must have permission to create a repo.
 #### How to create a personal access token in GitHub.com
 
 1. Once logged into github.com, navigate to your profile settings by clicking on your profile image towards the upper right and select 'Settings' from the menu that appears
-![](img/ghcom_settings.png)
+
+<img src="img/ghcom_settings.png" width="200" align="center">
+
 2. At the bottom of the list on the left-hand side of the page, select 'Developer settings'
-![](img/ghcom_dev_settings.png)
+
+<img src="img/ghcom_dev_settings.png" width="200" align="center">
+
 3. On the left-hand side of the Developer settings page, select 'Personal access tokens'
 4. From the options that appear beneath 'Personal access tokens', select 'Fine-grained tokens'
-![](img/ghcom_tokens.png)
+
+<img src="img/ghcom_tokens.png" width="200" align="center">
+
 5. Towards the right-hand side of the screen, select the 'Generate new token' button
-![](img/ghcom_generate_button.png)
+
+<img src="img/ghcom_generate_button.png" width="500" align="center">
+
 6. In the 'Token name' field, give the token a unique name that reflects its purpose (GitHub will let you know if the name is not available)
 7. Click on the 'Resource owner' drop-down
 8. In the list that appears, select the user account you want to migrate repositories to (your user account is selected by default)
@@ -107,9 +115,13 @@ On the destination it must have permission to create a repo.
 11. In the 'Permissions' section, click the 'Add permissions' button towards the right of the page
 12. In the list that appears, select 'Administration'
 13. Click the 'Add permissions' button again to close the list
-![](img/ghcom_perms_a.png)
+
+<img src="img/ghcom_perms_a.png" width="200" align="center">
+
 14. Click on the drop-down associated with the 'Administration' permission and select 'Read and write' from the options that appear
-![](img/ghcom_perms_b.png)
+
+<img src="img/ghcom_perms_b.png" width="200" align="center">
+
 15. At the bottom of the page, click 'Generate token'
 16. In the dialogue that appears, review your selected permissions
 	- If you need to go back and make any changes, click the 'Cancel' button, make your changes, then resume at step 15
@@ -121,18 +133,28 @@ On the destination it must have permission to create a repo.
 #### How to create a personal access token in GitHub.alaska.edu
 
 1. Once logged into github.alaska.edu, navigate to your profile settings by clicking on your profile image towards the upper right and select 'Settings' from the menu that appears
-![](img/ghak_settings.png)
+
+<img src="img/ghak_settings.png" width="200" align="center">
+
 2. Near the bottom of the list on the left-hand side of the page, select 'Developer settings'
-![](img/ghak_dev_settings.png)
+
+<img src="img/ghak_dev_settings.png" width="200" align="center">
+
 3. On the left-hand side of the Developer settings page, select 'Personal access tokens'
-![](img/ghak_tokens.png)
+
+<img src="img/ghak_tokens.png" width="200" align="center">
+
 4. Towards the right-hand side of the screen, select the 'Generate new token' button
-![](img/ghak_generate_button.png)
+
+<img src="img/ghak_generate_button.png" width="500" align="center">
+
 5. In the 'Token description' field, give the token a name that reflects its purpose (e.g., my_repo_migration)
 6. Select the needed permission scopes
 	- `repo` (all items)
 	- `admin:org` (all items)
-![](img/ghak_perms.png)
+
+<img src="img/ghak_perms.png" width="200" align="center">
+
 7. Scroll down and click the 'Generate token' button
 8. Copy your token (it's a string of numbers and letters with a green check mark to the immediate left of it -- you will not see it again if you navigate away from this page)
 9. In your `config.ini` file, paste the token in the 'token' field under the '`[source]`' header
