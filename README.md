@@ -175,5 +175,5 @@ optional arguments:
   -a, --archive         Archive Source Repos with an updated README to the new
                         repo location
   -o, --organization    Organization
-                        Use this flag when migrating repos associated with an org
+                        Organization-specific repositories, default is user-specific repositories
 ```
